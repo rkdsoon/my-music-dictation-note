@@ -1,5 +1,7 @@
  const STORAGE_KEY = "cheongeum-documents";
  const LAST_OPENED_KEY = "cheongeum-last-opened";
+const PDF_DATA_START = "CHEONGEUM_DATA_START:";
+const PDF_DATA_END = ":CHEONGEUM_DATA_END";
  
 const defaultSymbols = [
   { key: "breath-required", label: "✧", meaning: "숨 (필수)" },
@@ -31,6 +33,8 @@ const dom = {
   openToolsBtn: document.getElementById("open-tools-btn"),
   openInspectorBtn: document.getElementById("open-inspector-btn"),
   drawerOverlay: document.getElementById("drawer-overlay"),
+  importPdfBtn: document.getElementById("import-pdf-btn"),
+  importPdfInput: document.getElementById("import-pdf-input"),
    exportBtn: document.getElementById("export-btn"),
   exportPdfBtn: document.getElementById("export-pdf-btn"),
    inspectorEmpty: document.getElementById("inspector-empty"),
@@ -49,6 +53,7 @@ let currentPage = 0;
 let activeDrawer = null;
 let activePaletteSymbol = null;
 let isMobile = window.matchMedia("(max-width: 768px)").matches;
+let pdfjsReady = false;
  
  function createEmptyDocument() {
    return {
@@ -136,6 +141,21 @@ function renderLegend() {
     item.appendChild(text);
     dom.legend.appendChild(item);
   });
+}
+
+function encodeBase64(value) {
+  return btoa(unescape(encodeURIComponent(value)));
+}
+
+function decodeBase64(value) {
+  return decodeURIComponent(escape(atob(value)));
+}
+
+function setupPdfJs() {
+  if (pdfjsReady || !window.pdfjsLib) return;
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+  pdfjsReady = true;
 }
 
 function getTotalPages() {
@@ -546,6 +566,8 @@ async function exportPdf() {
   closeDrawer();
 
   try {
+    const encodedState = encodeBase64(JSON.stringify(documentState));
+
     for (let pageIndex = 0; pageIndex < totalPages; pageIndex += 1) {
       currentPage = pageIndex;
       renderCanvas();
@@ -573,11 +595,77 @@ async function exportPdf() {
       pdf.addImage(imgData, "PNG", marginX, marginY, renderWidth, renderHeight);
     }
 
+    const hiddenLineHeight = 1.5;
+    let hiddenY = pdf.internal.pageSize.getHeight() - 2;
+    pdf.setFontSize(1);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text(PDF_DATA_START, 2, hiddenY);
+    hiddenY -= hiddenLineHeight;
+    const chunkSize = 120;
+    for (let i = 0; i < encodedState.length; i += chunkSize) {
+      const chunk = encodedState.slice(i, i + chunkSize);
+      pdf.text(chunk, 2, hiddenY);
+      hiddenY -= hiddenLineHeight;
+      if (hiddenY < 2) {
+        pdf.addPage();
+        hiddenY = pdf.internal.pageSize.getHeight() - 2;
+      }
+    }
+    pdf.text(PDF_DATA_END, 2, hiddenY);
+
     const title = documentState.title || "cheongeum-note";
     pdf.save(`${title.replace(/\s+/g, "_")}.pdf`);
   } finally {
     currentPage = prevPage;
     renderCanvas();
+    dom.saveStatus.textContent = "자동 저장됨";
+  }
+}
+
+async function importPdf(file) {
+  setupPdfJs();
+  if (!window.pdfjsLib || !file) return;
+  dom.saveStatus.textContent = "PDF 가져오는 중...";
+
+  try {
+    const data = await file.arrayBuffer();
+    const pdf = await window.pdfjsLib.getDocument({ data }).promise;
+    let textBuffer = "";
+
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      const textContent = await page.getTextContent();
+      textBuffer += textContent.items.map((item) => item.str).join("");
+    }
+
+    const startIndex = textBuffer.indexOf(PDF_DATA_START);
+    const endIndex = textBuffer.indexOf(PDF_DATA_END, startIndex + 1);
+
+    if (startIndex === -1 || endIndex === -1) {
+      alert("이 PDF에는 편집 가능한 데이터가 없습니다.");
+      return;
+    }
+
+    const encoded = textBuffer
+      .slice(startIndex + PDF_DATA_START.length, endIndex)
+      .replace(/\s+/g, "");
+    const json = decodeBase64(encoded);
+    const parsed = JSON.parse(json);
+
+    if (!parsed || !Array.isArray(parsed.lines) || !Array.isArray(parsed.symbols)) {
+      alert("PDF 데이터 형식이 올바르지 않습니다.");
+      return;
+    }
+
+    documentState = parsed;
+    currentPage = 0;
+    selectedSymbolId = null;
+    render();
+    saveDocument();
+  } catch (error) {
+    alert("PDF 가져오기에 실패했습니다.");
+  } finally {
+    dom.importPdfInput.value = "";
     dom.saveStatus.textContent = "자동 저장됨";
   }
 }
@@ -616,6 +704,17 @@ async function exportPdf() {
  
    dom.exportBtn.addEventListener("click", exportPng);
   dom.exportPdfBtn.addEventListener("click", exportPdf);
+
+  dom.importPdfBtn.addEventListener("click", () => {
+    dom.importPdfInput.click();
+  });
+
+  dom.importPdfInput.addEventListener("change", (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (file) {
+      importPdf(file);
+    }
+  });
 
   dom.prevPageBtn.addEventListener("click", () => {
     goToPage(currentPage - 1);

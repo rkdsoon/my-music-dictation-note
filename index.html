@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="./styles.css" />
     <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
     <script defer src="./app.js"></script>
    </head>
    <body>
@@ -31,6 +32,8 @@
         <div class="actions">
           <button id="export-btn" type="button">PNG 내보내기</button>
           <button id="export-pdf-btn" type="button">PDF 내보내기</button>
+          <button id="import-pdf-btn" type="button">PDF 가져오기</button>
+          <input id="import-pdf-input" type="file" accept="application/pdf" hidden />
         </div>
        </header>
  
