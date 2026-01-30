@@ -477,20 +477,38 @@ function clearDragLock() {
      });
  }
 
-function exportPdf() {
+function waitForNextFrame() {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  });
+}
+
+async function exportPdf() {
   const canvasArea = dom.canvas;
   if (!canvasArea || !window.html2canvas || !window.jspdf) return;
   dom.saveStatus.textContent = "PDF 생성 중...";
 
-  window
-    .html2canvas(canvasArea, { backgroundColor: "#ffffff", scale: 2 })
-    .then((canvas) => {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("p", "mm", "a4");
+  const totalPages = getTotalPages();
+  const prevPage = currentPage;
+
+  closeDrawer();
+
+  try {
+    for (let pageIndex = 0; pageIndex < totalPages; pageIndex += 1) {
+      currentPage = pageIndex;
+      renderCanvas();
+      await waitForNextFrame();
+
+      const canvas = await window.html2canvas(canvasArea, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+      });
+
       const imgData = canvas.toDataURL("image/png");
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF("p", "mm", "a4");
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
@@ -499,14 +517,19 @@ function exportPdf() {
       const marginX = (pageWidth - renderWidth) / 2;
       const marginY = (pageHeight - renderHeight) / 2;
 
+      if (pageIndex > 0) {
+        pdf.addPage();
+      }
       pdf.addImage(imgData, "PNG", marginX, marginY, renderWidth, renderHeight);
+    }
 
-      const title = documentState.title || "cheongeum-note";
-      pdf.save(`${title.replace(/\s+/g, "_")}.pdf`);
-    })
-    .finally(() => {
-      dom.saveStatus.textContent = "자동 저장됨";
-    });
+    const title = documentState.title || "cheongeum-note";
+    pdf.save(`${title.replace(/\s+/g, "_")}.pdf`);
+  } finally {
+    currentPage = prevPage;
+    renderCanvas();
+    dom.saveStatus.textContent = "자동 저장됨";
+  }
 }
  
  function bindEvents() {
