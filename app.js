@@ -24,9 +24,13 @@ const dom = {
    palette: document.getElementById("symbol-palette"),
   legend: document.getElementById("symbol-legend"),
    canvas: document.getElementById("canvas"),
+  canvasWrap: document.querySelector(".canvas-wrap"),
   prevPageBtn: document.getElementById("prev-page-btn"),
   nextPageBtn: document.getElementById("next-page-btn"),
   pageIndicator: document.getElementById("page-indicator"),
+  openToolsBtn: document.getElementById("open-tools-btn"),
+  openInspectorBtn: document.getElementById("open-inspector-btn"),
+  drawerOverlay: document.getElementById("drawer-overlay"),
    exportBtn: document.getElementById("export-btn"),
   exportPdfBtn: document.getElementById("export-pdf-btn"),
    inspectorEmpty: document.getElementById("inspector-empty"),
@@ -42,6 +46,7 @@ const LINES_PER_PAGE = 8;
  let selectedSymbolId = null;
  let dragPayload = null;
 let currentPage = 0;
+let activeDrawer = null;
  
  function createEmptyDocument() {
    return {
@@ -102,6 +107,7 @@ let currentPage = 0;
      item.dataset.key = symbol.key;
      item.dataset.label = symbol.label;
      item.addEventListener("dragstart", handlePaletteDragStart);
+    item.addEventListener("dragend", clearDragLock);
      dom.palette.appendChild(item);
    });
  }
@@ -199,6 +205,7 @@ function renderCanvas() {
      el.draggable = true;
      el.addEventListener("click", () => selectSymbol(symbol.symbolId));
      el.addEventListener("dragstart", handleSymbolDragStart);
+  el.addEventListener("dragend", clearDragLock);
  
      if (symbol.symbolId === selectedSymbolId) {
        el.classList.add("selected");
@@ -262,12 +269,14 @@ function goToPage(nextPage) {
      label: event.currentTarget.dataset.label,
    };
    event.dataTransfer.setData("text/plain", dragPayload.key);
+  applyDragLock();
  }
  
  function handleSymbolDragStart(event) {
    const symbolId = event.currentTarget.dataset.id;
    dragPayload = { type: "symbol", symbolId };
    event.dataTransfer.setData("text/plain", symbolId);
+  applyDragLock();
  }
  
  function handleCanvasDragOver(event) {
@@ -283,6 +292,7 @@ function goToPage(nextPage) {
  
  function handleCanvasDrop(event) {
    event.preventDefault();
+  clearDragLock();
    document.querySelectorAll(".token.drop-target").forEach((el) => {
      el.classList.remove("drop-target");
    });
@@ -385,6 +395,28 @@ function goToPage(nextPage) {
    saveDocument();
  }
  
+function openDrawer(type) {
+  activeDrawer = type;
+  document.body.classList.toggle("drawer-tools-open", type === "tools");
+  document.body.classList.toggle("drawer-inspector-open", type === "inspector");
+  dom.drawerOverlay.classList.remove("hidden");
+}
+
+function closeDrawer() {
+  activeDrawer = null;
+  document.body.classList.remove("drawer-tools-open");
+  document.body.classList.remove("drawer-inspector-open");
+  dom.drawerOverlay.classList.add("hidden");
+}
+
+function applyDragLock() {
+  dom.canvasWrap.classList.add("dragging");
+}
+
+function clearDragLock() {
+  dom.canvasWrap.classList.remove("dragging");
+}
+
  function saveDocument() {
    dom.saveStatus.textContent = "저장 중...";
    documentState.updatedAt = new Date().toISOString();
@@ -519,8 +551,29 @@ function exportPdf() {
   dom.nextPageBtn.addEventListener("click", () => {
     goToPage(currentPage + 1);
   });
+
+  dom.openToolsBtn.addEventListener("click", () => {
+    if (activeDrawer === "tools") {
+      closeDrawer();
+    } else {
+      openDrawer("tools");
+    }
+  });
+
+  dom.openInspectorBtn.addEventListener("click", () => {
+    if (activeDrawer === "inspector") {
+      closeDrawer();
+    } else {
+      openDrawer("inspector");
+    }
+  });
+
+  dom.drawerOverlay.addEventListener("click", closeDrawer);
  
    window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeDrawer();
+    }
      if (event.key === "Backspace" || event.key === "Delete") {
        deleteSelectedSymbol();
      }

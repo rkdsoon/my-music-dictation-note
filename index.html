@@ -40,7 +40,7 @@
        </section>
  
       <main class="workspace">
-        <section class="toolstrip">
+        <section class="toolstrip" id="toolstrip">
           <div class="palette-row">
             <div class="palette-title">기본 기호</div>
             <div id="symbol-palette" class="palette-list horizontal"></div>
@@ -53,6 +53,12 @@
 
         <section class="work-area">
           <section class="canvas-wrap">
+            <div class="mobile-controls">
+              <button id="open-tools-btn" class="drawer-btn" type="button">도구</button>
+              <button id="open-inspector-btn" class="drawer-btn" type="button">
+                설정
+              </button>
+            </div>
             <div class="page-controls">
               <button id="prev-page-btn" class="page-btn" type="button">◀</button>
               <div id="page-indicator" class="page-indicator">1 / 1</div>
@@ -61,7 +67,7 @@
             <div id="canvas" class="canvas"></div>
           </section>
 
-          <aside class="inspector">
+          <aside class="inspector" id="inspector-panel">
             <div class="inspector-title">선택한 기호</div>
             <div id="inspector-empty" class="inspector-empty">선택된 기호가 없습니다.</div>
             <div id="inspector-body" class="inspector-body hidden">
@@ -77,6 +83,8 @@
             </div>
           </aside>
         </section>
+
+        <div id="drawer-overlay" class="drawer-overlay hidden"></div>
       </main>
      </div>
    </body>
