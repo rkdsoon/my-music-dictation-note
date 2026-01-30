@@ -47,6 +47,8 @@ const LINES_PER_PAGE = 8;
  let dragPayload = null;
 let currentPage = 0;
 let activeDrawer = null;
+let activePaletteSymbol = null;
+let isMobile = window.matchMedia("(max-width: 768px)").matches;
  
  function createEmptyDocument() {
    return {
@@ -103,11 +105,15 @@ let activeDrawer = null;
      const item = document.createElement("div");
      item.className = "palette-item";
      item.textContent = symbol.label;
-     item.draggable = true;
+    item.draggable = !isMobile;
      item.dataset.key = symbol.key;
      item.dataset.label = symbol.label;
      item.addEventListener("dragstart", handlePaletteDragStart);
     item.addEventListener("dragend", clearDragLock);
+    item.addEventListener("click", () => handlePaletteTap(symbol, item));
+    if (activePaletteSymbol && activePaletteSymbol.key === symbol.key) {
+      item.classList.add("active");
+    }
      dom.palette.appendChild(item);
    });
  }
@@ -161,6 +167,9 @@ function renderCanvas() {
       tokenEl.textContent = token.text;
       tokenEl.dataset.lineIndex = String(lineIndex);
       tokenEl.dataset.tokenIndex = String(tokenIndex);
+      tokenEl.addEventListener("click", (event) => {
+        handleTokenTap(event, lineIndex, tokenIndex, lineEl, tokenEl);
+      });
       lyricsEl.appendChild(tokenEl);
     });
 
@@ -263,6 +272,7 @@ function goToPage(nextPage) {
 }
  
  function handlePaletteDragStart(event) {
+  if (isMobile) return;
    dragPayload = {
      type: "palette",
      key: event.currentTarget.dataset.key,
@@ -273,6 +283,7 @@ function goToPage(nextPage) {
  }
  
  function handleSymbolDragStart(event) {
+  if (isMobile) return;
    const symbolId = event.currentTarget.dataset.id;
    dragPayload = { type: "symbol", symbolId };
    event.dataTransfer.setData("text/plain", symbolId);
@@ -347,6 +358,45 @@ function goToPage(nextPage) {
    renderInspector();
    saveDocument();
  }
+
+function handlePaletteTap(symbol, element) {
+  if (!isMobile) return;
+  activePaletteSymbol =
+    activePaletteSymbol && activePaletteSymbol.key === symbol.key ? null : symbol;
+  document.querySelectorAll(".palette-item.active").forEach((item) => {
+    item.classList.remove("active");
+  });
+  if (activePaletteSymbol) {
+    element.classList.add("active");
+  }
+}
+
+function handleTokenTap(event, lineIndex, tokenIndex, lineEl, tokenEl) {
+  if (!isMobile || !activePaletteSymbol) return;
+  const { offsetX, offsetY } = computeOffsets(lineEl, tokenEl, event);
+  const newSymbol = {
+    symbolId: crypto.randomUUID(),
+    type: "basic",
+    key: activePaletteSymbol.key,
+    label: activePaletteSymbol.label,
+    position: {
+      lineIndex,
+      tokenIndex,
+      offsetX,
+      offsetY,
+    },
+    style: {
+      color: "#1b1c20",
+      size: 18,
+    },
+  };
+  documentState.symbols.push(newSymbol);
+  selectedSymbolId = newSymbol.symbolId;
+  documentState.updatedAt = new Date().toISOString();
+  renderSymbols();
+  renderInspector();
+  saveDocument();
+}
  
  function findClosestToken(lineEl, event) {
    const tokens = Array.from(lineEl.querySelectorAll(".token"));
@@ -601,6 +651,14 @@ async function exportPdf() {
        deleteSelectedSymbol();
      }
    });
+
+  window
+    .matchMedia("(max-width: 768px)")
+    .addEventListener("change", (event) => {
+      isMobile = event.matches;
+      activePaletteSymbol = null;
+      render();
+    });
  }
  
  function init() {

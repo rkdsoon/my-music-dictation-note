@@ -224,6 +224,11 @@
  .palette-item:active {
    cursor: grabbing;
  }
+
+.palette-item.active {
+  outline: 3px solid var(--ink);
+  background: #ffd66a;
+}
  
 .legend-list {
   display: grid;
