@@ -1,0 +1,83 @@
+ <!doctype html>
+ <html lang="ko">
+   <head>
+     <meta charset="UTF-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+     <title>청음노트 MVP</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script defer src="./app.js"></script>
+   </head>
+   <body>
+    <div class="app window-frame">
+      <div class="window-bar">
+        <div class="window-tabs">
+          <div class="tab active"></div>
+          <div class="tab"></div>
+          <div class="tab"></div>
+        </div>
+        <div class="window-controls">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+      <header class="topbar">
+         <div class="title-group">
+           <input id="title-input" type="text" placeholder="노트 제목" />
+           <div id="save-status" class="save-status">자동 저장됨</div>
+         </div>
+        <div class="actions">
+          <button id="export-btn" type="button">PNG 내보내기</button>
+          <button id="export-pdf-btn" type="button">PDF 내보내기</button>
+        </div>
+       </header>
+ 
+       <section class="setup">
+         <textarea id="lyrics-input" placeholder="가사를 붙여넣어 주세요"></textarea>
+         <button id="apply-lyrics-btn" type="button">가사 적용</button>
+       </section>
+ 
+      <main class="workspace">
+        <section class="toolstrip">
+          <div class="palette-row">
+            <div class="palette-title">기본 기호</div>
+            <div id="symbol-palette" class="palette-list horizontal"></div>
+          </div>
+          <div class="legend">
+            <div class="legend-title">기호 의미</div>
+            <div id="symbol-legend" class="legend-list"></div>
+          </div>
+        </section>
+
+        <section class="work-area">
+          <section class="canvas-wrap">
+            <div class="page-controls">
+              <button id="prev-page-btn" class="page-btn" type="button">◀</button>
+              <div id="page-indicator" class="page-indicator">1 / 1</div>
+              <button id="next-page-btn" class="page-btn" type="button">▶</button>
+            </div>
+            <div id="canvas" class="canvas"></div>
+          </section>
+
+          <aside class="inspector">
+            <div class="inspector-title">선택한 기호</div>
+            <div id="inspector-empty" class="inspector-empty">선택된 기호가 없습니다.</div>
+            <div id="inspector-body" class="inspector-body hidden">
+              <div class="field">
+                <label for="symbol-size">크기</label>
+                <input id="symbol-size" type="range" min="10" max="36" />
+              </div>
+              <div class="field">
+                <label for="symbol-color">색상</label>
+                <input id="symbol-color" type="color" />
+              </div>
+              <button id="delete-symbol-btn" type="button">삭제</button>
+            </div>
+          </aside>
+        </section>
+      </main>
+     </div>
+   </body>
+ </html>
