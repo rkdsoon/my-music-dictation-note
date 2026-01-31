@@ -39,30 +39,24 @@
 
 .window-bar {
   display: flex;
-  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 16px;
   background: linear-gradient(180deg, var(--peach) 0%, #ffa18d 100%);
   border-bottom: 3px solid var(--ink);
   position: relative;
 }
 
-.window-bar-top {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 10px 16px 6px;
-}
-
 .window-tabs {
   display: flex;
   gap: 6px;
-  padding: 0 16px;
   position: relative;
   z-index: 1;
 }
 
 .tab {
   width: 100px;
-  height: 28px;
+  height: 32px;
   border: 3px solid var(--ink);
   border-bottom: 3px solid var(--ink);
   border-radius: 10px 10px 0 0;
@@ -78,6 +72,7 @@
 .window-controls {
   display: flex;
   gap: 10px;
+  padding-bottom: 10px;
 }
 
 .window-controls span {
@@ -484,19 +479,19 @@
     margin: 8px;
   }
 
-  .window-bar-top {
-    padding: 8px 12px 4px;
-  }
-
-  .window-tabs {
+  .window-bar {
     padding: 0 12px;
   }
 
   .tab {
     width: 70px;
-    height: 22px;
+    height: 26px;
     border-width: 2px;
     margin-bottom: -2px;
+  }
+
+  .window-controls {
+    padding-bottom: 8px;
   }
 
   .window-controls span {
