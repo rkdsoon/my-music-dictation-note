@@ -354,16 +354,22 @@
  
 .staff-line {
   position: relative;
-  padding: 16px 12px 20px;
-  min-height: 80px;
-  background-image: repeating-linear-gradient(
-    to bottom,
-    var(--line),
-    var(--line) 1px,
-    transparent 1px,
-    transparent 8px
-  );
-  background-size: 100% 40px;
+  padding: 60px 24px 24px;
+  min-height: 100px;
+  background-image:
+    linear-gradient(to bottom, var(--line) 0, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 0, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 0, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 0, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 0, var(--line) 1px, transparent 1px);
+  background-size: 100% 1px;
+  background-position:
+    0 12px,
+    0 22px,
+    0 32px,
+    0 42px,
+    0 52px;
+  background-repeat: no-repeat;
   border-radius: 12px;
 }
  
