@@ -39,31 +39,40 @@
 
 .window-bar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
+  flex-direction: column;
   background: linear-gradient(180deg, var(--peach) 0%, #ffa18d 100%);
   border-bottom: 3px solid var(--ink);
+  position: relative;
+}
+
+.window-bar-top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10px 16px 6px;
 }
 
 .window-tabs {
   display: flex;
-  gap: 10px;
+  gap: 6px;
+  padding: 0 16px;
+  position: relative;
+  z-index: 1;
 }
 
 .tab {
-  width: 80px;
-  height: 22px;
+  width: 100px;
+  height: 28px;
   border: 3px solid var(--ink);
-  border-bottom: none;
-  border-radius: 12px 12px 0 0;
-  background: var(--paper);
-  position: relative;
-  top: 6px;
+  border-bottom: 3px solid var(--ink);
+  border-radius: 10px 10px 0 0;
+  background: #ffa18d;
+  margin-bottom: -3px;
 }
 
 .tab.active {
-  background: var(--cream);
+  background: var(--paper);
+  border-bottom-color: var(--paper);
 }
 
 .window-controls {
@@ -475,14 +484,19 @@
     margin: 8px;
   }
 
-  .window-bar {
-    padding: 8px 12px;
+  .window-bar-top {
+    padding: 8px 12px 4px;
+  }
+
+  .window-tabs {
+    padding: 0 12px;
   }
 
   .tab {
-    width: 56px;
-    height: 18px;
+    width: 70px;
+    height: 22px;
     border-width: 2px;
+    margin-bottom: -2px;
   }
 
   .window-controls span {
